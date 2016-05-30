@@ -55,7 +55,7 @@ func main() {
 		Template: crawler.Template{
 			"id" : "span[class='nowrap marginright'] span",
 			"name" : "div[class*=offerheadinner] h1",
-			"description" : "div[id*=textContent] p",
+			//"description" : "div[id*=textContent] p",
 			"createdAt" : "span[class='pdingleft10 brlefte5']",
 			"price" : crawler.Query(func(p *requestor.Page) string {
 				o := p.Document().Find("div[class*='pricelabel'] strong").First().Text()

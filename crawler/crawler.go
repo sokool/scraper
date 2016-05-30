@@ -6,7 +6,6 @@ import (
 	"github.com/sokool/scraper/requestor"
 	"net/url"
 	"strings"
-	"log"
 )
 
 type Template map[string]interface{}
@@ -50,7 +49,7 @@ func (r *Crawler) visitObject(p *requestor.Page, t Template) {
 		o[name] = r.selectorValue(p, selector)
 	}
 	r.counter++
-	log.Printf("[%d]. %s\n", r.counter, o)
+	fmt.Printf("[%d]. %s\n", r.counter, o)
 }
 
 func (r *Crawler) visitRows(c *Configuration, p *requestor.Page) {
@@ -102,29 +101,3 @@ func fqdn(urlA, urlB string) string {
 	return fmt.Sprintf("%s://%s/%s", b.Scheme, b.Host, a)
 
 }
-
-
-
-//
-//test := My{
-//"funkcja" : Call(func(s string) string {
-//return fmt.Sprintf("%s ......... ", s)
-//}),
-//"tekst" : "dobry",
-//}
-//
-//for name, o := range test {
-//
-//switch t := o.(type) {
-//case Call :
-//fmt.Printf("CALL\n")
-////c := o.(Call)
-//fmt.Printf("[%s]:%s ==> %s\n", name, reflect.TypeOf(t), t("dupa"))
-//break;
-//case string :
-//fmt.Printf("STRING\n")
-//break;
-//default:
-//fmt.Printf("IGNORE!!!!\n")
-//}
-//}
