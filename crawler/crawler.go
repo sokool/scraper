@@ -6,17 +6,20 @@ import (
 	"github.com/sokool/scraper/requestor"
 	"net/url"
 	"strings"
+	"encoding/json"
+	"os"
 )
 
 type Template map[string]interface{}
 
-type Query func(*requestor.Page) string
+type Query func(*requestor.Page) interface{}
 
 type Configuration struct {
 	URL      string
 	Next     string
 	Object   string
 	Template Template
+	ExportFile string
 };
 
 type Crawler struct {
@@ -31,7 +34,7 @@ func (r *Crawler) Add(config *Configuration) *Crawler {
 
 	return r
 }
-func (r *Crawler) selectorValue(page *requestor.Page, input interface{}) string {
+func (r *Crawler) selectorValue(page *requestor.Page, input interface{}) interface{} {
 	switch o := input.(type) {
 	case Query:
 		return o(page)
@@ -42,21 +45,23 @@ func (r *Crawler) selectorValue(page *requestor.Page, input interface{}) string 
 	}
 }
 
-func (r *Crawler) visitObject(p *requestor.Page, t Template) {
+func (r *Crawler) visitObject(p *requestor.Page, c *Configuration) {
 	o := Template{}
 	o["url"] = p.Document().Url.String()
-	for name, selector := range t {
+	for name, selector := range c.Template {
 		o[name] = r.selectorValue(p, selector)
 	}
 	r.counter++
-	fmt.Printf("[%d]. %s\n", r.counter, o)
+	//fmt.Printf("[%d]. %s\n", r.counter, o)
+	js, _ := json.Marshal(o)
+	os.Stdout.Write(js)
 }
 
 func (r *Crawler) visitRows(c *Configuration, p *requestor.Page) {
 	p.Document().Find(c.Object).Each(func(i int, item *Selection) {
 		uri, _ := item.Attr("href")
 		r.request.Do(fqdn(uri, c.URL), func(page *requestor.Page) {
-			r.visitObject(page, c.Template)
+			r.visitObject(page, c)
 		})
 	});
 
@@ -81,6 +86,17 @@ func (r *Crawler) Run() {
 
 }
 
+func EachText(in, key, value string) Query {
+	return Query(func(page *requestor.Page) interface{} {
+		out := make(map[string]string)
+		page.Document().Find(in).Each(func(i int, item *Selection) {
+			out[item.Find(key).Text()] = item.Find(value).Text()
+		})
+
+		return out
+	})
+}
+
 func New() *Crawler {
 	c := &Crawler{
 		configs: make([]*Configuration, 0),
@@ -98,6 +114,6 @@ func fqdn(urlA, urlB string) string {
 		return urlA
 	}
 
-	return fmt.Sprintf("%s://%s/%s", b.Scheme, b.Host, a)
+	return fmt.Sprintf("%s://%s%s", b.Scheme, b.Host, a)
 
 }

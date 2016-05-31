@@ -2,7 +2,6 @@ package requestor
 
 import (
 	query "github.com/PuerkitoBio/goquery"
-	"fmt"
 	"sync"
 	"net/url"
 	"time"
@@ -51,14 +50,11 @@ func server() (func(*url.URL, func(*Page)), func()) {
 	stream := make(chan *invoker)
 
 	request := func(u *url.URL, response func(*Page)) {
-		//fmt.Printf("REQUEST START %s\n", u)
-
 		stream <- &invoker{url: u, onLoad: response}
 	}
 
 	finished := func() {
 		delay.Wait()
-		fmt.Printf("DONE!")
 	}
 
 	go func(invokers <- chan *invoker) {
@@ -66,7 +62,6 @@ func server() (func(*url.URL, func(*Page)), func()) {
 			delay.Add(1)
 			go func(invoker *invoker) {
 				defer delay.Done()
-				//fmt.Printf("FETCHING URL %s\n", h)
 				start := time.Now()
 				invoker.onLoad(&Page{
 					document: fetch(invoker.url),

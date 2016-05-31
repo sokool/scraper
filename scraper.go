@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/sokool/scraper/requestor"
 	"github.com/sokool/scraper/crawler"
 )
 
@@ -48,38 +47,67 @@ func main() {
 	//}
 	//r.finish()
 
-	olx := &crawler.Configuration{
-		URL: "http://olx.pl/oferty/",
-		Next: "a[class*=pageNextPrev]",
-		Object: "a[class*='thumb']",
-		Template: crawler.Template{
-			"id" : "span[class='nowrap marginright'] span",
-			"name" : "div[class*=offerheadinner] h1",
-			//"description" : "div[id*=textContent] p",
-			"createdAt" : "span[class='pdingleft10 brlefte5']",
-			"price" : crawler.Query(func(p *requestor.Page) string {
-				o := p.Document().Find("div[class*='pricelabel'] strong").First().Text()
-				return o
-			}),
-		},
-	}
-	otomoto := &crawler.Configuration{
-		URL: "http://otomoto.pl/osobowe",
-		Next: "[class='next abs'] a",
-		Object: "a[class*='img-cover']",
-		Template: crawler.Template{
-			"name" : "header[class*=om-offer-title] div[class=row] h1",
-			"cena" : "div[class=price-cell] span[class=om-price]",
-		},
-	}
+	//olx := &crawler.Configuration{
+	//	URL: "http://olx.pl/oferty/",
+	//	Next: "a[class*=pageNextPrev]",
+	//	Object: "a[class*='thumb']",
+	//	Template: crawler.Template{
+	//		"id" : "span[class='nowrap marginright'] span",
+	//		"name" : "div[class*=offerheadinner] h1",
+	//		//"description" : "div[id*=textContent] p",
+	//		"createdAt" : "span[class='pdingleft10 brlefte5']",
+	//		//"price" : crawler.Query(func(p *requestor.Page) string {
+	//		//	o := p.Document().Find("div[class*='pricelabel'] strong").First().Text()
+	//		//	return o
+	//		//}),
+	//	},
+	//}
+	//immoscout := &crawler.Configuration{
+	//	URL: "http://www.immobilienscout24.de/Suche/S-2/Wohnung-Kauf?enteredFrom=result_list",
+	//	Next: "a[data-is24-qa='paging_bottom_next']",
+	//	Object: "a[class='result-list-entry__brand-title-container']",
+	//	Template: crawler.Template{
+	//		"name" : "#expose-title",
+	//		"price": "div[class*='is24qa-kaufpreis is24-value']",
+	//		"type" : "dd[class*='is24qa-wohnungstyp']",
+	//		"living_space" : "div[class*='is24qa-wohnflaeche-ca is24-value']",
+	//		"rooms": "div[class*='is24qa-zi is24-value']",
+	//		//"description" : "pre[class=is24qa-objektbeschreibung]",
+	//	},
+	//}
 	//
+	//otomoto := &crawler.Configuration{
+	//	URL: "http://otomoto.pl/osobowe",
+	//	Next: "[class='next abs'] a",
+	//	Object: "a[class*='img-cover']",
+	//	Template: crawler.Template{
+	//		"name" : "header[class*=om-offer-title] div[class=row] h1",
+	//		"cena" : "div[class=price-cell] span[class=om-price]",
+	//		"ficzery" : crawler.EachText(
+	//			"ul[class*='params-list'] li",
+	//			"small",
+	//			"span",
+	//		),
+	//	},
+	//}
+	//
+
 	homegate := &crawler.Configuration{
-		URL: "http://www.homegate.ch/buy/apartment/matching-list?lastMap=ctn_gr&ab=G000000000000000000000000000000000000000000000000000000000000000000000000000000120000000008E00200C082640001000000000000&ep=%d",
+		URL: "http://www.homegate.ch/buy/apartment/matching-list?lastMap=ctn_gr&ab=G000000000000000000000000000000000000000000000000000000000000000000000000000000120000000008E00200C082640001000000000000",
 		Next: "a[rel=next]",
 		Object: "a[class='detail-page-link box-row--link']",
+		ExportFile: "homegate.json",
 		Template: crawler.Template{
 			"id" : "div[class=nr] span",
 			"name" : "h1.title",
+			"price" : "span[itemprop='price']",
+			//"address": "div[class*=detail-address]",
+			//"type" : crawler.First{"ul[class='list--plain list--flat list--spaced-double text--small'] span[class*='float-right']"},
+			"features" : crawler.EachText(
+				"ul[class='list--plain list--flat list--spaced-double text--small'] li",
+				"span[class='text--small']",
+				"span[class*='float-right']",
+			),
 			//"description" : "div[class='description-content']",
 		},
 
@@ -87,8 +115,9 @@ func main() {
 
 	crawler.
 	New().
-	Add(olx).
-	Add(otomoto).
+	//Add(olx).
+	//Add(immoscout).
+	//Add(otomoto).
 	Add(homegate).
 	Run()
 
