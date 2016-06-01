@@ -5,12 +5,9 @@ import (
 	"fmt"
 	"github.com/sokool/scraper/requestor"
 	"net/url"
-	"strings"
-	"encoding/json"
-	"os"
 )
 
-type Template map[string]interface{}
+type Template map[string]Query
 
 type Query func(*requestor.Page) interface{}
 
@@ -19,7 +16,7 @@ type Configuration struct {
 	Next     string
 	Object   string
 	Template Template
-	ExportFile string
+	receiver func(map[string]interface{})
 };
 
 type Crawler struct {
@@ -29,32 +26,22 @@ type Crawler struct {
 	counter int
 }
 
-func (r *Crawler) Add(config *Configuration) *Crawler {
+func (r *Crawler) Add(config *Configuration, fn func(record map[string]interface{})) *Crawler {
+	config.receiver = fn
 	r.configs = append(r.configs, config)
 
 	return r
 }
-func (r *Crawler) selectorValue(page *requestor.Page, input interface{}) interface{} {
-	switch o := input.(type) {
-	case Query:
-		return o(page)
-	case string:
-		return strings.TrimSpace(page.Document().Find(o).Text())
-	default:
-		return ""
-	}
-}
 
 func (r *Crawler) visitObject(p *requestor.Page, c *Configuration) {
-	o := Template{}
-	o["url"] = p.Document().Url.String()
+	output := make(map[string]interface{})
+	output["url"] = p.Document().Url.String()
 	for name, selector := range c.Template {
-		o[name] = r.selectorValue(p, selector)
+		output[name] = selector(p)
 	}
 	r.counter++
-	//fmt.Printf("[%d]. %s\n", r.counter, o)
-	js, _ := json.Marshal(o)
-	os.Stdout.Write(js)
+
+	c.receiver(output)
 }
 
 func (r *Crawler) visitRows(c *Configuration, p *requestor.Page) {
@@ -86,14 +73,23 @@ func (r *Crawler) Run() {
 
 }
 
-func EachText(in, key, value string) Query {
+func Each(in, key, value string) Query {
 	return Query(func(page *requestor.Page) interface{} {
 		out := make(map[string]string)
 		page.Document().Find(in).Each(func(i int, item *Selection) {
-			out[item.Find(key).Text()] = item.Find(value).Text()
+			left := item.Find(key).Text()
+			if left != "" {
+				out[item.Find(key).Text()] = item.Find(value).Text()
+			}
 		})
 
 		return out
+	})
+}
+
+func First(in string) Query {
+	return Query(func(page *requestor.Page) interface{} {
+		return page.Document().Find(in).First().Text()
 	})
 }
 

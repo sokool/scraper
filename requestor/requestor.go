@@ -93,3 +93,44 @@ func New() *Request {
 		done: stop,
 	}
 }
+
+//sites := []string {
+//	"http://google.pl",
+//	"http://onet.pl",
+//	"http://wp.pl",
+//	"http://polsat.pl",
+//	"http://tvn.pl",
+//	"http://facebook.pl",
+//	"http://fakty.interia.pl/polska",
+//	"http://mint-soft.pl",
+//	"http://google.de",
+//	"http://www.wroclaw.apodatkowa.gov.pl/izba-skarbowa-we-wroclawiu;jsessionid=C3FE209C723806A6F34547C5EF3C5C34",
+//}
+//
+//showTitle := func(page *requestor.Page) {
+//	d := page.Document();
+//	fmt.Printf("%s://%s [%s] %s\n", d.Url.Scheme, d.Url.Host, page.LoadingTime(), d.Find("title").Text())
+//}
+//
+//request := requestor.New()
+//
+//for _, url := range sites {
+//	request.Do(url, showTitle)
+//}
+//request.WaitForAll()
+//
+//finish()
+
+//proc := make(chan *Ta)
+
+//for _, c := range r.configs {
+//	url := newUrl(c.Domain, c.URI, func(p *page) {
+//		o := &Ta{page: p, conf: c}
+//		r.list(o)
+//
+//	})
+//
+//	r.request(url)
+//
+//}
+//r.finish()
