@@ -29,13 +29,13 @@ type finisher func()
 
 type Result interface{}
 
-func (c *Client) Do(httpUrl string, response Response) {
-	u, ok := url.Parse(httpUrl)
+func (c *Client) Do(httpUrl string, onResponse Response) {
+	link, ok := url.Parse(httpUrl)
 	if (ok != nil) {
 		panic(ok)
 	}
 
-	c.onRequest(&request{u, response})
+	c.onRequest(&request{link, onResponse})
 }
 
 func (c *Client) WaitForAll() {
