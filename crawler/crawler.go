@@ -1,105 +1,130 @@
 package crawler
 
 import (
-	. "github.com/PuerkitoBio/goquery"
-	"fmt"
-	"github.com/sokool/scraper/requestor"
 	"net/url"
+	"github.com/sokool/scraper/requestor"
+	"fmt"
+	"reflect"
+	"github.com/kr/pretty"
+	"github.com/PuerkitoBio/goquery"
+	"github.com/bfontaine/gostruct"
+	"github.com/leebenson/conform"
+	"os"
+	"encoding/xml"
 )
 
-type Template map[string]Query
+type storage struct {
+	objects []*Object
+}
 
-type Query func(*requestor.Page) interface{}
+func (s *storage) put(o Object) *storage {
+	s.objects = append(s.objects, &o)
 
-type Configuration struct {
-	URL      string
-	Next     string
-	Object   string
-	Template Template
-	receiver func(map[string]interface{})
-};
+	return s
+}
+
+func (s *storage) flush(name string) {
+	file, err := os.Create(name)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return
+	}
+	defer file.Close()
+
+	fmt.Fprintf(file, "<%s>\n", "objects")
+	for _, object := range s.objects {
+		bytes, _ := xml.MarshalIndent(object, "", "  ")
+		fmt.Fprintf(file, "%s\n", string(bytes))
+	}
+	fmt.Fprintf(file, "</%s>\n", "objects")
+}
+
+type Object interface{}
+
+type Feeder struct {
+	Name        string
+	Url         string
+	Next        string
+	Landing     string
+	Data        Object
+	Destination string
+	OnData      func(Object)
+
+	storage     *storage
+	dataType    reflect.Type
+}
 
 type Crawler struct {
-	configs []*Configuration
-	request *requestor.Request
-	finish  func()
-	counter int
-}
-
-func (r *Crawler) Add(config *Configuration, fn func(record map[string]interface{})) *Crawler {
-	config.receiver = fn
-	r.configs = append(r.configs, config)
-
-	return r
-}
-
-func (r *Crawler) visitObject(p *requestor.Page, c *Configuration) {
-	output := make(map[string]interface{})
-	output["url"] = p.Document().Url.String()
-	for name, selector := range c.Template {
-		output[name] = selector(p)
-	}
-	r.counter++
-
-	c.receiver(output)
-}
-
-func (r *Crawler) visitRows(c *Configuration, p *requestor.Page) {
-	p.Document().Find(c.Object).Each(func(i int, item *Selection) {
-		uri, _ := item.Attr("href")
-		r.request.Do(fqdn(uri, c.URL), func(page *requestor.Page) {
-			r.visitObject(page, c)
-		})
-	});
-
-}
-
-func (r *Crawler) visitResult(url string, c *Configuration) {
-	r.request.Do(fqdn(url, c.URL), func(p *requestor.Page) {
-		nextUri, ok := p.Document().Find(c.Next).Attr("href")
-		if ok {
-			r.visitResult(fqdn(nextUri, c.URL), c)
-		}
-		r.visitRows(c, p)
-	})
-
-}
-
-func (r *Crawler) Run() {
-	for _, conf := range r.configs {
-		r.visitResult(conf.URL, conf)
-	}
-	r.request.WaitForAll()
-
-}
-
-func Each(in, key, value string) Query {
-	return Query(func(page *requestor.Page) interface{} {
-		out := make(map[string]string)
-		page.Document().Find(in).Each(func(i int, item *Selection) {
-			left := item.Find(key).Text()
-			if left != "" {
-				out[item.Find(key).Text()] = item.Find(value).Text()
-			}
-		})
-
-		return out
-	})
-}
-
-func First(in string) Query {
-	return Query(func(page *requestor.Page) interface{} {
-		return page.Document().Find(in).First().Text()
-	})
+	feeders []*Feeder
+	request *requestor.Client
 }
 
 func New() *Crawler {
-	c := &Crawler{
-		configs: make([]*Configuration, 0),
-		request: requestor.New(),
-		counter: 0,
+	return &Crawler{
+		request: requestor.NewGoQueryClient(),
+		feeders: make([]*Feeder, 0),
 	}
+}
+
+func (c *Crawler) Add(feed *Feeder) *Crawler {
+	feed.dataType = reflect.TypeOf(feed.Data)
+	feed.storage = &storage{objects:make([]*Object, 0)}
+	c.feeders = append(c.feeders, feed)
 	return c
+}
+
+func (c *Crawler) Scrape() {
+
+	for _, feed := range c.feeders {
+		c.page(feed.Url, feed)
+	}
+
+	c.request.WaitForAll()
+
+	for _, feed := range c.feeders {
+		feed.storage.flush(feed.Name + ".xml")
+	}
+}
+
+func (f *Feeder) destination(o Object) {
+	if f.Destination == "xml" {
+		f.storage.put(o)
+	}
+}
+
+func (c *Crawler) row(item *goquery.Selection, feed *Feeder) {
+	uri, _ := item.Attr("href")
+	c.request.Do(fqdn(uri, feed.Url), func(result requestor.Result) {
+
+		value := reflect.New(feed.dataType)
+		initializeStruct(feed.dataType, value.Elem())
+		object := value.Interface()
+
+		gostruct.Populate(object, result.(*goquery.Document))
+		conform.Strings(object)
+
+		feed.destination(object)
+		feed.OnData(object)
+
+	})
+}
+
+func (c *Crawler) page(url string, feed *Feeder) {
+	c.request.Do(fqdn(url, feed.Url), func(result requestor.Result) {
+		document := result.(*goquery.Document)
+		nextUri, ok := document.Find(feed.Next).Attr("href")
+		document.Find(feed.Landing).Each(func(i int, item *goquery.Selection) {
+			c.row(item, feed)
+		})
+
+		if ok {
+			c.page(nextUri, feed)
+		}
+	})
+}
+
+func Show(i interface{}) {
+	fmt.Printf("%# v\n", pretty.Formatter(i))
 }
 
 func fqdn(urlA, urlB string) string {
@@ -109,7 +134,28 @@ func fqdn(urlA, urlB string) string {
 	if a.Host != "" {
 		return urlA
 	}
-
 	return fmt.Sprintf("%s://%s%s", b.Scheme, b.Host, a)
 
+}
+
+func initializeStruct(t reflect.Type, v reflect.Value) {
+	for i := 0; i < v.NumField(); i++ {
+		f := v.Field(i)
+		ft := t.Field(i)
+		switch ft.Type.Kind() {
+		case reflect.Map:
+			f.Set(reflect.MakeMap(ft.Type))
+		case reflect.Slice:
+			f.Set(reflect.MakeSlice(ft.Type, 0, 0))
+		case reflect.Chan:
+			f.Set(reflect.MakeChan(ft.Type, 0))
+		case reflect.Struct:
+			initializeStruct(ft.Type, f)
+		case reflect.Ptr:
+			fv := reflect.New(ft.Type.Elem())
+			initializeStruct(ft.Type.Elem(), fv.Elem())
+			f.Set(fv)
+		default:
+		}
+	}
 }
