@@ -4,133 +4,136 @@ import (
 	query "github.com/PuerkitoBio/goquery"
 	"sync"
 	"net/url"
-	"time"
 	"log"
+	"os"
+	"github.com/bfontaine/gostruct"
+	"fmt"
 )
 
-type invoker struct {
-	url    *url.URL
-	onLoad func(*Page)
+type Client struct {
+	onRequest caller
+	onFinish  finisher
+}
+type request struct {
+	url      *url.URL
+	onResult Response
 }
 
-type Page struct {
-	document    *query.Document // Representation of jQuery framework
-	number      int             // Page number
-	loadingTime time.Duration   // Time of page fetching
-}
+type Response func(Result)
 
-type Request struct {
-	call func(u *url.URL, f func(*Page))
-	done func()
-}
+type Engine func(*url.URL) Result
 
-func (p *Page) Document() *query.Document {
-	return p.document
-}
+type caller func(*request)
 
-func (p *Page) LoadingTime() time.Duration {
-	return p.loadingTime
-}
+type finisher func()
 
-func (r *Request) Do(httpUrl string, response func(*Page)) {
+type Result interface{}
+
+func (c *Client) Do(httpUrl string, response Response) {
 	u, ok := url.Parse(httpUrl)
 	if (ok != nil) {
 		panic(ok)
 	}
 
-	r.call(u, response)
+	c.onRequest(&request{u, response})
 }
 
-func (r *Request) WaitForAll() {
-	r.done()
+func (c *Client) WaitForAll() {
+	c.onFinish()
 }
 
-func server() (func(*url.URL, func(*Page)), func()) {
+// Create framework in order to make async calls. It returns two functions:
+// Caller: function takes Request and put it on the queue
+// Finisher: function to let framework know that no more Request are going to be created.
+func server(engine Engine) (caller, finisher) {
 	delay := sync.WaitGroup{}
-	stream := make(chan *invoker)
-
-	request := func(u *url.URL, response func(*Page)) {
-		stream <- &invoker{url: u, onLoad: response}
-	}
-
-	finished := func() {
-		delay.Wait()
-	}
-
-	go func(invokers <- chan *invoker) {
-		for i := range invokers {
+	requests := make(chan *request)
+	go func(invokers <- chan *request) {
+		for invoker := range invokers {
 			delay.Add(1)
-			go func(invoker *invoker) {
+			go func(request *request) {
+				request.onResult(engine(request.url))
 				defer delay.Done()
-				start := time.Now()
-				invoker.onLoad(&Page{
-					document: fetch(invoker.url),
-					loadingTime: time.Since(start),
-				})
-
-			}(i)
+			}(invoker)
 		}
-	}(stream)
+	}(requests)
 
-	return request, finished
+	return caller(func(r *request) {
+		requests <- r
+	}), finisher(func() {
+		delay.Wait()
+	})
 }
 
-func fetch(url *url.URL) *query.Document {
-	d, err := query.NewDocument(url.String())
-	if err != nil {
-		log.Fatalf("\t %s %s\n", err, url)
-	}
-	//log.Printf("%s\n", url)
-
-	return d
-
-}
-
-func New() *Request {
-	start, stop := server()
-	return &Request{
-		call: start,
-		done: stop,
+func NewClient(e Engine) *Client {
+	caller, finisher := server(e)
+	return &Client{
+		onRequest: caller,
+		onFinish: finisher,
 	}
 }
 
-//sites := []string {
-//	"http://google.pl",
-//	"http://onet.pl",
-//	"http://wp.pl",
-//	"http://polsat.pl",
-//	"http://tvn.pl",
-//	"http://facebook.pl",
-//	"http://fakty.interia.pl/polska",
-//	"http://mint-soft.pl",
-//	"http://google.de",
-//	"http://www.wroclaw.apodatkowa.gov.pl/izba-skarbowa-we-wroclawiu;jsessionid=C3FE209C723806A6F34547C5EF3C5C34",
-//}
-//
-//showTitle := func(page *requestor.Page) {
-//	d := page.Document();
-//	fmt.Printf("%s://%s [%s] %s\n", d.Url.Scheme, d.Url.Host, page.LoadingTime(), d.Find("title").Text())
-//}
-//
-//request := requestor.New()
-//
-//for _, url := range sites {
-//	request.Do(url, showTitle)
-//}
-//request.WaitForAll()
-//
-//finish()
+func NewGoQueryClient() *Client {
+	return NewClient(func(u *url.URL) Result {
+		d, err := query.NewDocument(u.String())
+		if err != nil {
+			log.Fatalf("\t %s %s\n", err, u)
+		}
 
-//proc := make(chan *Ta)
+		return d
+	})
+}
 
-//for _, c := range r.configs {
-//	url := newUrl(c.Domain, c.URI, func(p *page) {
-//		o := &Ta{page: p, conf: c}
-//		r.list(o)
+func NewGoStruct(target interface{}) *Client {
+
+	return NewClient(func(u *url.URL) Result {
+		err := gostruct.Fetch(target, u.String())
+		if err != nil {
+			fmt.Printf("Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		return target
+	})
+
+}
+
 //
-//	})
-//
-//	r.request(url)
-//
+//sites := []string{
+//"http://google.pl",
+//"http://onet.pl",
+//"http://wp.pl",
+//"http://polsat.pl",
+//"http://tvn.pl",
+//"http://facebook.pl",
+//"http://fakty.interia.pl/polska",
+//"http://mint-soft.pl",
+//"http://google.de",
+//"http://www.wroclaw.apodatkowa.gov.pl/izba-skarbowa-we-wroclawiu;jsessionid=C3FE209C723806A6F34547C5EF3C5C34",
+//"http://stackoverflow.com",
+//"http://allegro.pl",
+//"http://olx.pl",
+//"http://otomoto.pl",
+//"http://otodom.pl",
+//"http://gradka.pl",
+//"http://eurosport.onet.pl",
 //}
-//r.finish()
+//
+//documentResponse := func(v requestor.Result) {
+//	document := v.(*goquery.Document)
+//	a, _ := document.Find("meta[name=description]").Attr("content")
+//	if a == "" {
+//		a = document.Find("title").Text()
+//	}
+//
+//	fmt.Printf("%s --> %# v\n", document.Url.String(), a)
+//}
+//
+//r := requestor.NewGoQuery()
+//for i, url := range sites {
+//r.Do(url, documentResponse)
+//if i == 0 {
+//time.Sleep(time.Second)
+//}
+//}
+//r.WaitForAll()
