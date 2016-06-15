@@ -11,10 +11,13 @@ type Thief struct {
 
 func (this *Thief) Run() {
 	for _, template := range this.templates {
-		this.visitor.push([]node{template.root})
+		var nodes []interface{}
+		this.visitor.push(append(nodes, template.root))
 		pages := this.visitor.find(template)
 		fmt.Println(pages)
 	}
+
+
 }
 
 func (this *Thief) Add(e *Template) *Thief {

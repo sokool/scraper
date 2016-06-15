@@ -5,9 +5,9 @@ import (
 )
 
 type visitor interface {
-	OnNode(node) neighbor
-	OnNeighbor(neighbor) []node
-	OnLast(neighbor)
+	OnNode(node interface{}) (neighbor interface{}) //findNehighbor?
+	OnNeighbor(neighbor interface{}) (nodes []interface{}) //findNode?
+	OnLast(neighbor interface{}) //onLastNode?
 	OnFinish()
 }
 
@@ -15,18 +15,16 @@ type bfs struct {
 	workers int         //Number of workers for nodes processing
 	visits  int         //Number of visited nodes
 	inQueue int         //Number of left nodes to visit
-	queue   chan []node //Represents FIFO queue
+	queue   chan []interface{} //Represents FIFO queue
 }
-
-type node interface{}
 
 type neighbor interface{}
 
-func (this *bfs) push(n []node) {
+func (this *bfs) push(node []interface{}) {
 	this.inQueue++
-	go func(items []node) {
-		this.queue <- items
-	}(n)
+	go func(n []interface{}) {
+		this.queue <- n
+	}(node)
 }
 
 func (this *bfs) find(r visitor) int {
@@ -35,11 +33,11 @@ func (this *bfs) find(r visitor) int {
 		go func() {
 			for nodes := range this.queue {
 				delay := sync.WaitGroup{}
-				var out []neighbor
+				var out []interface{}
 				for _, item := range nodes {
 					delay.Add(1)
-					go func(n node) {
-						result := r.OnNode(n)
+					go func(node interface{}) {
+						result := r.OnNode(node)
 						this.visits++
 						if (result == nil) {
 							return
@@ -76,6 +74,6 @@ func newBFS() *bfs {
 		workers: 32,
 		visits: 0,
 		inQueue: 0,
-		queue: make(chan []node),
+		queue: make(chan []interface{}),
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/sokool/scraper/storage"
 	"net/url"
 	"strings"
+	"github.com/sokool/console"
 )
 
 type Template struct {
@@ -24,8 +25,8 @@ type rule struct {
 	nodes    []string
 }
 
-func (this *Template) OnNode(in node) neighbor {
-	item := in.(element)
+func (this *Template) OnNode(node interface{}) interface{} {
+	item := node.(element)
 	item.doc = getDocument(item.url)
 
 	if item.doc == nil {
@@ -34,9 +35,9 @@ func (this *Template) OnNode(in node) neighbor {
 	return item
 }
 
-func (this *Template) OnNeighbor(in neighbor) []node {
-	a := in.(element)
-	var out []node
+func (this *Template) OnNeighbor(neighbor interface{}) []interface{} {
+	a := neighbor.(element)
+	var out []interface{}
 	for _, neighbor := range a.neighbors {
 		rule := this.rules[neighbor]
 		a.doc.Find(rule.selector).Each(func(n int, selection *query.Selection) {
@@ -52,8 +53,8 @@ func (this *Template) OnNeighbor(in neighbor) []node {
 	return out
 }
 
-func (this *Template) OnLast(in neighbor) {
-	element := in.(element)
+func (this *Template) OnLast(node interface{}) {
+	element := node.(element)
 	data := make(map[string]interface{})
 	for _, neighbor := range element.neighbors {
 		rule := this.rules[neighbor]
@@ -61,7 +62,7 @@ func (this *Template) OnLast(in neighbor) {
 			data[neighbor] = selection.Text()
 		})
 	}
-
+	console.Log(data)
 	//test := make(map[string]interface{})
 	//test["dupa"] = "TADA"
 	//data["test"] = test
@@ -89,7 +90,7 @@ func (this *Template) Add(name string, selector interface{}, neighbors ...string
 
 }
 
-func NewTemplate(format string, link string, nodes ...string) *Template {
+func NewScheme(format string, link string, nodes ...string) *Template {
 	u, _ := url.Parse(link)
 	return &Template{
 		root: element{url:link, neighbors: nodes},

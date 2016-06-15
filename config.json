@@ -1,64 +1,56 @@
 {
   "url": "http://www.homegate.ch/",
   "storage": "xml",
-  "root": {
-    //NODE
-    "name": "buy",
-    "selector": "li.page-nav-item--buy a",
-    "neighbors": "sections"
+  "graph": {
+    "root": {
+      "name": "buy",
+      "selector": "li.page-nav-item--buy a",
+      "neighbors": "sections"
+    },
+    "nodes": [
+      {
+        "name": "sections",
+        "selector": "div.ad-aside-content div.box a",
+        "neighbors": "countries"
+      },
+      {
+        "name": "countries",
+        "selector": "area[href]",
+        "neighbors": "cantons"
+      },
+      {
+        "name": "cantons",
+        "selector": "area[href]",
+        "neighbors": "documents, nextList"
+      },
+      {
+        "name": "nextList",
+        "selector": "a[rel=next]",
+        "neighbors": "documents, nextList",
+        "schema": "partial"
+      },
+      {
+        "name": "documents",
+        "selector": "a[class='detail-page-link box-row--link']",
+        "schema": "details"
+      }
+    ]
   },
-  "graph": [
-    //MAP OF NODES
-    {
-      "name": "sections",
-      // - result of selector must be valid URL or []URL
-      // - selector always takes HREF attribute
-      "selector": "div.ad-aside-content div.box a",
-      "neighbors": "countries"
-    },
-    {
-      //obligatory
-      "name": "countries",
-      //obligatory
-      "selector": "area[href]",
-      "neighbors": "cantons"
-    },
-    {
-      "name": "cantons",
-      "selector": "area[href]",
-      "neighbors": "documents, nextList"
-    },
-    {
-      "name": "nextList",
-      "selector": "a[rel=next]",
-      "neighbors": "documents, nextList",
-      "schema": "partial"
-    },
-    {
-      "name": "documents",
-      "selector": "a[class='detail-page-link box-row--link']",
-      //each node.scheme for UNIQE scheme.identifier must be visited, this results of unique scheme persistence (memory free)
-      "schema": "details"
-    }
-  ],
   "schemes": [
     {
-      //name to let node scrape partial object
+      "test": "asd",
       "name": "details",
-      //CSS selector for UNIQE identifier of object
-      "identifier": "",
-      //Structure of object
+      "identifier": {
+        "selector": "div.nr span",
+        "action": "text",
+        "filters": "trim, num",
+        "validators": "notEmpty, isNum"
+      },
       "structure": {
-        "id": {
-          "selector": "div.nr span",
-          "action": "text",
-          "filter": "trim, num",
-          "validator": "notEmpty, isNum"
-        },
         "name": {
           "selector": "h1.title",
           "action": "text",
-          "filter": "lower, trim, title"
+          "filters": "lower, trim, title"
         },
         "features": {
           "selector": "div.detail-key-data",
@@ -68,13 +60,14 @@
     },
     {
       "name": "partial",
-      "identifier": "",
+      "identifier": {
+        "selector": "div.nr span",
+        "action": "text",
+        "filters": "trim, num",
+        "validators": "notEmpty, isNum"
+      },
       "structure": {
       }
     }
   ]
 }
-
-// - funkcje dla selektorów
-// - schematy moga mieć dane wielopoziomowe
-// - iteracje po danych kluc[selector] => wartosc[selector]
