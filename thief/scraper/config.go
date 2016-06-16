@@ -1,17 +1,17 @@
-package thief
+package scraper
 
 import (
 	"github.com/clbanning/mxj"
 	"github.com/sokool/console"
-	"io/ioutil"
+	"github.com/sokool/scraper/thief/layout"
 	"github.com/sokool/scraper/thief/scheme"
-	"github.com/sokool/scraper/thief/graph"
+	"io/ioutil"
 )
 
 type Configuration struct {
-	Url     string `json:"url"`
-	Storage string `json:"storage"`
-	Graph   *graph.Graph `json:"graph"`
+	Url     string           `json:"url"`
+	Storage string           `json:"storage"`
+	Layout  *layout.Layout   `json:"layout"`
 	Schemas []*scheme.Scheme `json:"schemes"`
 }
 
@@ -142,7 +142,6 @@ func Config(filepath string) *Configuration {
 	//buildRoot().
 	//buildNodes().
 	//buildSchemes()
-
 
 	return config
 }

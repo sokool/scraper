@@ -1,20 +1,20 @@
-package thief
+package scraper
 
 import (
 	"sync"
 )
 
 type visitor interface {
-	OnNode(node interface{}) (neighbor interface{}) //findNehighbor?
+	OnNode(node interface{}) (neighbor interface{})        //findNeighbor?
 	OnNeighbor(neighbor interface{}) (nodes []interface{}) //findNode?
-	OnLast(neighbor interface{}) //onLastNode?
+	OnLast(neighbor interface{})                           //onLastNode?
 	OnFinish()
 }
 
 type bfs struct {
-	workers int         //Number of workers for nodes processing
-	visits  int         //Number of visited nodes
-	inQueue int         //Number of left nodes to visit
+	workers int                //Number of workers/threads/gorutines for nodes processing
+	visits  int                //Number of visited nodes
+	inQueue int                //Number of left nodes to visit
 	queue   chan []interface{} //Represents FIFO queue
 }
 
@@ -37,9 +37,9 @@ func (this *bfs) find(r visitor) int {
 				for _, item := range nodes {
 					delay.Add(1)
 					go func(node interface{}) {
-						result := r.OnNode(node)
+						result := r.OnNode(node) //pobiera dokument
 						this.visits++
-						if (result == nil) {
+						if result == nil {
 							return
 						}
 						out = append(out, result)
@@ -48,7 +48,7 @@ func (this *bfs) find(r visitor) int {
 				}
 				delay.Wait()
 				for _, neighbor := range out {
-					nodes := r.OnNeighbor(neighbor)
+					nodes := r.OnNeighbor(neighbor) //szuka urli url'e
 					if len(nodes) == 0 {
 						r.OnLast(neighbor)
 						continue
@@ -56,7 +56,7 @@ func (this *bfs) find(r visitor) int {
 					this.push(nodes)
 				}
 				this.inQueue--
-				if (this.inQueue == 0) {
+				if this.inQueue == 0 {
 					close(this.queue)
 					wait <- false
 					return
@@ -72,8 +72,8 @@ func (this *bfs) find(r visitor) int {
 func newBFS() *bfs {
 	return &bfs{
 		workers: 32,
-		visits: 0,
+		visits:  0,
 		inQueue: 0,
-		queue: make(chan []interface{}),
+		queue:   make(chan []interface{}),
 	}
 }

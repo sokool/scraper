@@ -1,4 +1,4 @@
-package scheme
+package model
 
 type Element struct {
 	Selector   string `json:"selector"`

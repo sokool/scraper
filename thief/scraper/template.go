@@ -1,11 +1,11 @@
-package thief
+package scraper
 
 import (
 	query "github.com/PuerkitoBio/goquery"
+	"github.com/sokool/console"
 	"github.com/sokool/scraper/storage"
 	"net/url"
 	"strings"
-	"github.com/sokool/console"
 )
 
 type Template struct {
@@ -42,11 +42,11 @@ func (this *Template) OnNeighbor(neighbor interface{}) []interface{} {
 		rule := this.rules[neighbor]
 		a.doc.Find(rule.selector).Each(func(n int, selection *query.Selection) {
 			href, ok := selection.Attr("href")
-			if (!ok) {
+			if !ok {
 				return
 			}
 			//https://github.com/asaskevich/govalidator
-			out = append(out, element{url:"http://www.homegate.ch" + href, neighbors: rule.nodes})
+			out = append(out, element{url: "http://www.homegate.ch" + href, neighbors: rule.nodes})
 		})
 	}
 
@@ -75,14 +75,14 @@ func (this *Template) OnFinish() {
 	this.storage.Flush()
 }
 
-func (this *Template) Add(name string, selector interface{}, neighbors ...string) (*Template) {
+func (this *Template) Add(name string, selector interface{}, neighbors ...string) *Template {
 	var nodes []string
 	for _, neighbor := range neighbors {
 		nodes = append(nodes, neighbor)
 	}
 
 	switch c := selector.(type) {
-	case string :
+	case string:
 		this.rules[name] = &rule{c, nodes}
 		break
 	}
@@ -93,8 +93,8 @@ func (this *Template) Add(name string, selector interface{}, neighbors ...string
 func NewScheme(format string, link string, nodes ...string) *Template {
 	u, _ := url.Parse(link)
 	return &Template{
-		root: element{url:link, neighbors: nodes},
+		root:    element{url: link, neighbors: nodes},
 		storage: storage.Get(format)(strings.Replace(u.Host, ".", "-", -1)),
-		rules: make(map[string]*rule),
+		rules:   make(map[string]*rule),
 	}
 }
