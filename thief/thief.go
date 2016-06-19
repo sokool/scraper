@@ -4,31 +4,30 @@ import (
 	"runtime"
 	"github.com/sokool/scraper/thief/model"
 	"github.com/sokool/scraper/thief/graph"
+	"fmt"
 )
 
 type Thief struct {
-	config map[string]*model.Configuration
+	list map[string]*model.Template
 }
 
 func (this *Thief) Run() {
-	for _, config := range this.config {
-		graph.New(config.Layout, 8)
-		//var nodes []interface{}
-		//this.graph.push(append(nodes, config.root))
-		//pages := this.graph.find(config)
-		//fmt.Println(pages)
+	workers := 32
+	fmt.Printf("Workers: %d\n", workers)
+	for _, template := range this.list {
+		graph.New(template, workers).GoBFS()
 	}
 
 }
 
-func (this *Thief) Add(config *model.Configuration) *Thief {
-	this.config[config.Name] = config
+func (this *Thief) Add(template *model.Template) *Thief {
+	this.list[template.Name()] = template
 	return this
 }
 
 func New() *Thief {
 	return &Thief{
-		config: make(map[string]*model.Configuration),
+		list: make(map[string]*model.Template),
 	}
 }
 
@@ -36,7 +35,7 @@ func main() {
 	runtime.GOMAXPROCS(4)
 
 	New().
-	Add(model.Config("/home/sokool/go/src/github.com/sokool/scraper/thief/homegate.json")).
+	Add(model.FromJsonFile("/home/sokool/go/src/github.com/sokool/scraper/thief/otomoto.json")).
 	Run()
 
 }

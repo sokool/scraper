@@ -16,7 +16,7 @@ func (this *data) Flush() {
 
 }
 
-func STRUCT(params ...string) Storage {
+func STRUCT(params  []string) Storage {
 	return &data{
 	}
 }

@@ -33,7 +33,7 @@ func (this *xml) Flush() {
 
 }
 
-func XML(filename ...string) Storage {
+func XML(filename []string) Storage {
 	return &xml{
 		name: filename[0],
 	}
