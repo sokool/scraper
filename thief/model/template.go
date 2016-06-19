@@ -67,8 +67,7 @@ func (this *Template) Visit(in graph.Node) []graph.Node {
 			}
 			for _, name := range action.Neighbors {
 				n := this.config.Nodes[name]
-				var x node
-				x = *n
+				x := *n
 				x.url = href
 				this.fill(&x)
 				nodes = append(nodes, &x)
