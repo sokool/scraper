@@ -1,11 +1,11 @@
 package http
 
 import (
-	"fmt"
 	query "github.com/PuerkitoBio/goquery"
 	"net/http"
 	"runtime"
 	"time"
+	"fmt"
 )
 
 var errors, sucess int = 0, 0

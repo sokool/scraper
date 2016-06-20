@@ -14,24 +14,27 @@ type Graph struct {
 }
 
 func (this *Graph) push(n Node) *Graph {
+	this.inQueue++
 	go func(node Node) {
 		this.queue <- node
 	}(n)
 	return this
 }
 
-func (this *Graph) visitNeighbors(nodes []Node) []Node {
+func (this *Graph) open(n Node) []Node {
+	childrens := this.traveler.Visit(n)
+	return childrens
+}
+
+func (this *Graph) openNeighbors(nodes []Node) []Node {
 	delay := sync.WaitGroup{}
 	var out []Node
 	for _, n := range nodes {
 		delay.Add(1)
 		go func(node Node) {
-			this.inQueue++
-			childrens := this.traveler.Visit(node)
-			for _, neighbor := range childrens {
+			for _, neighbor := range this.open(node) {
 				out = append(out, neighbor)
 			}
-			this.inQueue--
 			delay.Done()
 		}(n)
 	}
@@ -42,15 +45,14 @@ func (this *Graph) visitNeighbors(nodes []Node) []Node {
 
 func (this *Graph) bfs(onDone chan <- bool) {
 	for node := range this.queue {
-		this.inQueue++
-		neighbors := this.traveler.Visit(node)
-		for _, toVisit := range this.visitNeighbors(neighbors) {
+		neighbors := this.open(node)
+		for _, toVisit := range this.openNeighbors(neighbors) {
 			this.push(toVisit)
 		}
 		this.inQueue--
 		if (this.inQueue == 0) {
-			//close(this.queue)
-			//onDone <- true
+			close(this.queue)
+			onDone <- true
 		}
 	}
 }
@@ -61,14 +63,12 @@ func (this *Graph) GoBFS() int {
 		go this.bfs(waitOnDone)
 	}
 	<-waitOnDone
-	fmt.Println("DONE")
-	//this.traveler.OnFinish()
+	this.traveler.Done()
 
 	return 0
 }
 
 func New(traveler Traveler, workers int) *Graph {
-
 	graph := &Graph{
 		noOfProcess: workers,
 		visits:      0,

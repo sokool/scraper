@@ -18,8 +18,6 @@ type Template struct {
 	config   *configuration
 	onResult func(Object)
 	storage  storage.Storage
-
-	hit      int
 }
 
 func (this *Template) OnResult(f func(Object)) {
@@ -37,17 +35,16 @@ func (this *Template) Root() graph.Node {
 	return root
 }
 
+func (this *Template) Done() {
+	this.storage.Flush()
+}
 func (this *Template) onHit(doc *query.Document) {
 	_, object := this.config.Schema.structure(doc)
 	if this.onResult != nil {
 		this.onResult(object)
 	}
 
-	this.hit++
 	this.storage.Add(object)
-	if this.hit == 50 {
-		this.storage.Flush()
-	}
 }
 
 func (this *Template) Visit(in graph.Node) []graph.Node {
