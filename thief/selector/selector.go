@@ -5,8 +5,12 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-func Parse(input string) (string, map[string][]string) {
+type Command struct {
+	selector string
+	actions  map[string][]string
+}
 
+func Parse(input string) *Command {
 	var selectorOut string
 	var actionOut map[string][]string
 
@@ -17,7 +21,10 @@ func Parse(input string) (string, map[string][]string) {
 	o := strings.Split(input, "|")
 	selectorOut = strings.TrimSpace(o[0])
 	if selectorOut == "" {
-		return selectorOut, actionOut
+		return &Command{
+			selector: selectorOut,
+			actions: actionOut,
+		}
 	}
 
 	actionOut = make(map[string][]string)
@@ -35,15 +42,16 @@ func Parse(input string) (string, map[string][]string) {
 		actionOut[strings.TrimSpace(params[0])] = options
 	}
 
-	return selectorOut, actionOut
+	return &Command{
+		selector: selectorOut,
+		actions: actionOut,
+	}
 }
 
-func Run(document *goquery.Document, in string) map[string]string {
-	selector, actions := Parse(in)
+func (this *Command) Run(document *goquery.Document) map[string]string {
 	out := make(map[string]string)
-	document.Find(selector).Each(func(number int, element *goquery.Selection) {
-		for name, params := range actions {
-
+	document.Find(this.selector).Each(func(number int, element *goquery.Selection) {
+		for name, params := range this.actions {
 			for name, value := range operations[name](element, params) {
 				out[name] = value
 			}

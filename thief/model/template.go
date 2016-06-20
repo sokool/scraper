@@ -34,8 +34,8 @@ func (this *Template) Done() {
 	this.storage.Flush()
 }
 
-func (this *Template) onHit(doc *query.Document) {
-	_, object := this.config.Schema.structure(doc)
+func (this *Template) onHit(d *query.Document) {
+	_, object := this.config.Schema.structure(d)
 	if this.onResult != nil {
 		this.onResult(object)
 	}

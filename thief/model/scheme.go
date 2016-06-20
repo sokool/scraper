@@ -14,7 +14,7 @@ func (this *scheme) structure(doc *goquery.Document) (string, map[string]interfa
 	out := make(map[string]interface{})
 
 	for name, field := range this.Fields {
-		value := selector.Run(doc, field.Selector)
+		value := selector.Parse(field.Selector).Run(doc)
 		if len(value) == 1 {
 			out[name] = value[""]
 		} else {

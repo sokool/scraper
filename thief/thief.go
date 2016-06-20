@@ -35,7 +35,7 @@ func main() {
 	runtime.GOMAXPROCS(4)
 
 	New().
-	Add(model.FromJsonFile("/home/sokool/go/src/github.com/sokool/scraper/thief/otomoto.json")).
+	Add(model.FromJsonFile("/home/sokool/go/src/github.com/sokool/scraper/thief/homegate.json")).
 	Run()
 
 }

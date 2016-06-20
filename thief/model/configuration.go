@@ -6,8 +6,8 @@ import (
 )
 
 type configuration struct {
-	Name   string`json:"name"`
-	Url    string`json:"url"`
+	Name   string
+	Url    string
 	Root   string
 	Nodes  map[string]*node
 	Schema *scheme

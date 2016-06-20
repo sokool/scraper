@@ -20,7 +20,8 @@ func (this *node) hasSelector() bool {
 }
 
 func (this *node) copy() *node {
-	return &(*this)
+	node := *this
+	return &node
 }
 
 func (this *node) setUrl(link string) *node {

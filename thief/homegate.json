@@ -1,6 +1,6 @@
 {
     "name": "Homegate - coś tam!",
-    "url": "http://www.homegate.ch/buy/apartment/canton-obwalden",
+    "url": "http://www.homegate.ch/buy/apartment/canton-graubuenden",
     "root": "cantons",
     "nodes": {
         "buy": {
@@ -36,13 +36,7 @@
             ]
         },
         "documents": {
-            "selector": "a[class='detail-page-link box-row--link']",
-            "neighbors": [
-                "object"
-            ]
-        },
-        "object": {
-            "schema": "details"
+            "selector": "a[class='detail-page-link box-row--link']"
         }
     },
     "schema": {
