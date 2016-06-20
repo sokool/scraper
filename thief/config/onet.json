@@ -1,0 +1,38 @@
+{
+    "name": "_onet",
+    "url": "http://www.onet.pl",
+    "root": "current-news",
+    "nodes": {
+        "current-news": {
+            "selector": "article.newsBox div.boxContent a[data-staticr]",
+            "neighbors": [
+                "article"
+            ]
+        },
+        "article": {
+            "schema": "go"
+        }
+    },
+    "schema": {
+        "storage": "json",
+        "fields": {
+            "id": {
+                "selector": "meta[name=pubId] |attr:content",
+                "filters": "trim, num"
+            },
+            "title": {
+                "selector": "#mainTitle h1",
+                "filters": "lower, trim, title"
+            },
+            "content": {
+                "selector": "div#detail |html"
+            },
+            "url" :{
+                "selector": "link[rel=canonical] |attr:href"
+            },
+            "category": {
+                "selector": "div.breadcrumbs span[itemprop] |map"
+            }
+        }
+    }
+}

@@ -34,8 +34,12 @@ func New() *Thief {
 func main() {
 	runtime.GOMAXPROCS(4)
 
+	configPath := "/home/sokool/go/src/github.com/sokool/scraper/thief/config/"
+
 	New().
-	Add(model.FromJsonFile("/home/sokool/go/src/github.com/sokool/scraper/thief/homegate.json")).
+	Add(model.FromJsonFile(configPath + "otomoto.json")).
+	Add(model.FromJsonFile(configPath + "onet.json")).
+	Add(model.FromJsonFile(configPath + "homegate.json")).
 	Run()
 
 }
