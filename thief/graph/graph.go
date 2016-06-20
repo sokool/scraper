@@ -2,7 +2,6 @@ package graph
 
 import (
 	"sync"
-	"fmt"
 )
 
 type Graph struct {

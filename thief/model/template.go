@@ -7,8 +7,6 @@ import (
 	"io/ioutil"
 	"github.com/clbanning/mxj"
 	"github.com/sokool/console"
-	"net/url"
-	"fmt"
 	"github.com/sokool/scraper/storage"
 )
 
@@ -29,15 +27,13 @@ func (this *Template) Name() string {
 }
 
 func (this *Template) Root() graph.Node {
-	root := this.config.Nodes[this.config.Root]
-	root.url = this.config.Url
-
-	return root
+	return this.config.root()
 }
 
 func (this *Template) Done() {
 	this.storage.Flush()
 }
+
 func (this *Template) onHit(doc *query.Document) {
 	_, object := this.config.Schema.structure(doc)
 	if this.onResult != nil {
@@ -48,46 +44,24 @@ func (this *Template) onHit(doc *query.Document) {
 }
 
 func (this *Template) Visit(in graph.Node) []graph.Node {
+	var nodes []graph.Node
 	action := in.(*node)
 	document := http.Get(action.url)
-	if action.Schema != "" {
+
+	if !action.hasSelector() {
 		this.onHit(document)
+		return nodes
 	}
 
-	var nodes []graph.Node
-	if action.Selector != "" {
-
-		document.Find(action.Selector).Each(func(n int, selection *query.Selection) {
-			href, ok := selection.Attr("href")
-			if (!ok) {
-				return
-			}
-			for _, name := range action.Neighbors {
-				n := this.config.Nodes[name]
-				x := *n
-				x.url = href
-				this.fill(&x)
-				nodes = append(nodes, &x)
-			}
-
+	document.Find(action.Selector).Each(func(n int, selection *query.Selection) {
+		href, _ := selection.Attr("href")
+		this.config.neighborsFunc(action, func(n *node) {
+			n.setUrl(this.config.prepareURL(href))
+			nodes = append(nodes, n)
 		})
-	}
+	})
+
 	return nodes
-}
-
-func (this *Template) fill(n *node) {
-	url, err := url.Parse(n.url)
-	if err != nil {
-		return
-	}
-
-	if url.Scheme != "" {
-		return
-	}
-
-	url, _ = url.Parse(this.config.Url)
-	n.url = fmt.Sprintf("%s://%s/%s", url.Scheme, url.Host, n.url)
-
 }
 
 func FromJsonFile(file string) *Template {

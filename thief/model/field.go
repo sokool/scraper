@@ -1,6 +1,6 @@
 package model
 
-type element struct {
+type field struct {
 	Selector    string
 	Filters     string
 }

@@ -7,8 +7,7 @@ import (
 
 type scheme struct {
 	Storage string
-	Name    string
-	Fields  map[string]*element
+	Fields  map[string]*field
 }
 
 func (this *scheme) structure(doc *goquery.Document) (string, map[string]interface{}) {
@@ -21,7 +20,6 @@ func (this *scheme) structure(doc *goquery.Document) (string, map[string]interfa
 		} else {
 			out[name] = value
 		}
-
 	}
 
 	return "x", out
