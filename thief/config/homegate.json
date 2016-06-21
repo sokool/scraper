@@ -1,0 +1,77 @@
+{
+    "name": "_homegate",
+    "url": "http://www.homegate.ch/buy/apartment/canton-graubuenden",
+    "root": "cantons",
+    "nodes": {
+        "buy": {
+            "selector": "li.page-nav-item--buy a",
+            "neighbors": [
+                "sections"
+            ]
+        },
+        "sections": {
+            "selector": "div.ad-aside-content div.box a",
+            "neighbors": [
+                "regions"
+            ]
+        },
+        "regions": {
+            "selector": "area[href]",
+            "neighbors": [
+                "cantons"
+            ]
+        },
+        "cantons": {
+            "selector": "area[href]",
+            "neighbors": [
+                "documents",
+                "next-page"
+            ]
+        },
+        "next-page": {
+            "selector": "a[rel=next]",
+            "neighbors": [
+                "documents",
+                "next-page"
+            ]
+        },
+        "documents": {
+            "selector": "a[class='detail-page-link box-row--link']"
+        }
+    },
+    "schema": {
+        "storage": "json",
+        "fields": {
+            "id": {
+                "selector": "div.nr span",
+                "filters": "trim, num"
+            },
+            "name": {
+                "selector": "h1.title",
+                "filters": "lower, trim, title"
+            },
+            "features": {
+                "selector": "div.detail-key-data li |map",
+                "action": "list"
+            },
+            "living-space": {
+                "selector": "ul.list--plain li |after:Living space"
+            },
+            "rooms": {
+                "selector": "ul.list--plain li |after:Rooms"
+            },
+            "type": {
+                "selector": "ul.list--plain li |after:Type"
+            },
+            "price": {
+                "selector": "span[itemprop=price] |text"
+            },
+            "currency": {
+                "selector": "span[itemprop=priceCurrency] |text"
+            },
+            "description": {
+                "selector": "div.detail-description |text"
+            }
+        }
+    }
+}

@@ -1,11 +1,11 @@
 package http
 
 import (
-	"fmt"
 	query "github.com/PuerkitoBio/goquery"
 	"net/http"
 	"runtime"
 	"time"
+	"fmt"
 )
 
 var errors, sucess int = 0, 0
@@ -25,8 +25,7 @@ func Get(url string) *query.Document {
 
 	mem = mem + memStats.Alloc
 	since := time.Since(start).Seconds()
-
-	fmt.Printf("\r running:%.2fs, errors: %d, success: %d[avg: %.2f], gorutins: %d, memory: %.2f [avg:%.2f] %s",
+	fmt.Printf("\r running:%.2fs, errors: %d, success: %d[avg: %.2f], gorutins: %d, memory: %.2f [avg:%.2f]",
 		since,
 		errors,
 		sucess,
@@ -34,9 +33,7 @@ func Get(url string) *query.Document {
 		runtime.NumGoroutine(),
 		toMB(memStats.Alloc),
 		toMB(uint64(mem/uint64(sucess))),
-		url,
 	)
-	//fmt.Printf(url)
 	document, err := query.NewDocumentFromResponse(res)
 
 	if err != nil {

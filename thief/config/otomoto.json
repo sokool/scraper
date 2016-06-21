@@ -1,0 +1,59 @@
+{
+    "name": "_otomoto_audi_a4_b8",
+    "url": "http://otomoto.pl/osobowe/audi/a4/b8-2007/",
+    "root": "next-page-of-cars",
+    "nodes": {
+        "next-page-of-cars": {
+            "selector": "[class='next abs'] a",
+            "neighbors": [
+                "car",
+                "next-page-of-cars"
+            ]
+        },
+        "car": {
+            "selector": "a[class*='img-cover']"
+        }
+    },
+    "schema": {
+        "storage": "json",
+        "fields": {
+            "id": {
+                "selector": "div.favorite-box a |attr:data-id",
+                "filters": "trim, num"
+            },
+            "title": {
+                "selector": "meta[property='og:title'] |attr:content",
+                "filters": "lower, trim, title"
+            },
+            "brand": {
+                "selector": "li.offer-params__item |after:Marka"
+            },
+            "vin": {
+                "selector": "li.offer-params__item |after:VIN"
+            },
+            "milage": {
+                "selector": "li.offer-params__item |after:Przebieg"
+            },
+            "model": {
+                "selector": "li.offer-params__item |after:Model"
+            },
+            "year": {
+                "selector": "li.offer-params__item |after:Rok produkcji"
+            },
+            "price": {
+                "selector": "span.offer-price__number |node:0",
+                "filters": "lower, trim, title"
+            },
+            "currency": {
+                "selector": "span.offer-price__number |node:1",
+                "filters": "lower, trim, title"
+            },
+            "url": {
+                "selector": "meta[property='og:url'] |attr:content"
+            },
+            "features": {
+                "selector": "li.offer-params__item |map"
+            }
+        }
+    }
+}

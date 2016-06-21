@@ -31,7 +31,7 @@ func (this *json) Flush() {
 
 }
 
-func JSON(filename ...string) Storage {
+func JSON(filename []string) Storage {
 	return &json{
 		name: filename[0],
 	}
