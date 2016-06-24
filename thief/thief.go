@@ -5,6 +5,8 @@ import (
 	"github.com/sokool/scraper/thief/model"
 	"github.com/sokool/scraper/thief/graph"
 	"fmt"
+	"github.com/sokool/scraper/thief/ui"
+
 )
 
 type Thief struct {
@@ -15,6 +17,7 @@ func (this *Thief) Run() {
 	workers := 32
 	fmt.Printf("Workers: %d\n", workers)
 	for _, template := range this.list {
+		fmt.Println()
 		graph.New(template, workers).GoBFS()
 	}
 
@@ -38,8 +41,9 @@ func main() {
 
 	New().
 	Add(model.FromJsonFile(configPath + "otomoto.json")).
-	Add(model.FromJsonFile(configPath + "onet.json")).
-	Add(model.FromJsonFile(configPath + "homegate.json")).
+	//Add(model.FromJsonFile(configPath + "onet.json")).
+	//Add(model.FromJsonFile(configPath + "homegate.json")).
 	Run()
 
+	ui.Render()
 }

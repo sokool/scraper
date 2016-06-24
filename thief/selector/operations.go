@@ -2,9 +2,9 @@ package selector
 
 import (
 	. "github.com/PuerkitoBio/goquery"
-	"strconv"
 	"strings"
 	"github.com/sokool/console"
+	"bitbucket.org/gotamer/cases"
 )
 
 type invoker func(*Selection, []string, *result)
@@ -32,16 +32,26 @@ var operations = map[string]invoker{
 }
 
 func text(s *Selection, params []string, out *result) {
-	out.set(strings.TrimSpace(s.First().Text()))
+	if len(params) == 1 {
+		data := []interface{}{}
+		s.Each(func(idx int, itm *Selection) {
+			data = append(data, strings.TrimSpace(itm.Text()))
+		})
+		out.set(data)
+	} else {
+
+		out.set(strings.TrimSpace(s.First().Text()))
+	}
 }
 
 func attr(s *Selection, in []string, out *result) {
 	switch len(in) {
 	case 2:
-		data := make(map[string]string)
+		//data := make(map[string]interface{})
+		data := []interface{}{}
 		s.Each(func(index int, item *Selection) {
 			attribute, _ := item.First().Attr(in[0])
-			data[strconv.Itoa(index)] = attribute
+			data = append(data, attribute)
 		})
 
 		out.set(data)
@@ -57,11 +67,13 @@ func attr(s *Selection, in []string, out *result) {
 }
 
 func arrayMap(s *Selection, in []string, out *result) {
-	data := make(map[string]string)
+	data := make(map[string]interface{})
 	s.Each(func(idx int, itm *Selection) {
-		key := strings.TrimSpace(NewDocumentFromNode(itm.Children().Nodes[0]).Text())
+		key := cases.Camel(NewDocumentFromNode(itm.Children().Nodes[0]).Text())
 		value := strings.TrimSpace(NewDocumentFromNode(itm.Children().Nodes[1]).Text())
-
+		if key == "" {
+			return
+		}
 		data[key] = value
 	})
 
@@ -89,7 +101,7 @@ func node(s *Selection, in []string, out *result) {
 func after(s *Selection, in []string, out *result) {
 	all := &result{}
 	arrayMap(s, in, all)
-	for name, value := range all.get().(map[string]string) {
+	for name, value := range all.get().(map[string]interface{}) {
 		if name == in[0] {
 			out.set(value)
 			return

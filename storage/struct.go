@@ -12,11 +12,11 @@ func (this *data) Add(in map[string]interface{}) {
 	console.Log(in)
 }
 
-func (this *data) Flush() {
+func (this *data) Flush(name string) {
 
 }
 
-func STRUCT(params  []string) Storage {
+func STRUCT(params  []string) *data {
 	return &data{
 	}
 }

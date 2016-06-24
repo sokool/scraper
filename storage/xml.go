@@ -16,8 +16,13 @@ func (this *xml) Add(o map[string]interface{}) {
 
 }
 
-func (this *xml) Flush() {
-	handler, err := os.Create(this.name + ".xml")
+func (this *xml) Count() int {
+	return len(this.list)
+}
+
+
+func (this *xml) Flush(name string) {
+	handler, err := os.Create(name + ".xml")
 	if err != nil {
 		fmt.Println("Error opening file:", err)
 		return

@@ -1,6 +1,6 @@
 {
-    "name": "_otomoto_audi_a4_b8",
-    "url": "http://otomoto.pl/osobowe/audi/a4/b8-2007/",
+    "name": "AUDI-A4",
+    "url": "http://otomoto.pl/osobowe/audi/a4",
     "root": "next-page-of-cars",
     "nodes": {
         "next-page-of-cars": {
@@ -19,37 +19,57 @@
         "fields": {
             "id": {
                 "selector": "div.favorite-box a |attr:data-id",
-                "filters": "trim, num"
+                "filters": "trim"
             },
             "title": {
                 "selector": "meta[property='og:title'] |attr:content",
-                "filters": "lower, trim, title"
+                "filters": "trim, rspaces, upper"
+            },
+            "photos": {
+                "selector": "div.photo-item img|attr:src:true"
             },
             "brand": {
-                "selector": "li.offer-params__item |after:Marka"
+                "selector": "li.offer-params__item |after:Marka",
+                "filters": "trim"
             },
             "vin": {
                 "selector": "li.offer-params__item |after:VIN"
             },
-            "milage": {
-                "selector": "li.offer-params__item |after:Przebieg"
+            "mileage": {
+                "selector": "li.offer-params__item |after:Przebieg",
+                "filters": "num, trim"
             },
             "model": {
                 "selector": "li.offer-params__item |after:Model"
             },
+            "engine": {
+                "selector": "li.offer-params__item |after:PojemnośćSkokowa |after:RodzajPaliwa"
+            },
             "year": {
-                "selector": "li.offer-params__item |after:Rok produkcji"
+                "selector": "li.offer-params__item |after:RokProdukcji"
             },
             "price": {
-                "selector": "span.offer-price__number |node:0",
-                "filters": "lower, trim, title"
+                "selector": "span.offer-price__number |text",
+                "filters": "num, trim"
             },
             "currency": {
-                "selector": "span.offer-price__number |node:1",
-                "filters": "lower, trim, title"
+                "selector": "span.offer-price__number |text",
+                "filters": "upper, alpha, trim"
             },
             "url": {
-                "selector": "meta[property='og:url'] |attr:content"
+                "selector": "meta[property='og:url'] |attr:content",
+                "filters": ""
+            },
+            "location": {
+                "selector": "div.seller-box__seller-address |text",
+                "filters": "rspaces"
+            },
+            "description": {
+                "selector": "div.offer-description |text",
+                "filters": "rspaces"
+            },
+            "equipment": {
+                "selector": "li.offer-features__item |text:each"
             },
             "features": {
                 "selector": "li.offer-params__item |map"

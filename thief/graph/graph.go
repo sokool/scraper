@@ -6,10 +6,9 @@ import (
 
 type Graph struct {
 	noOfProcess int       //Number of workers/threads/gorutines for nodes processing
-	visits      int       //Number of visited nodes
 	inQueue     int       //Number of left nodes to visit
 	queue       chan Node //Represents FIFO queue
-	traveler    Traveler
+	traveler    Traveler  //Guy who's deliver next nodes to visit
 }
 
 func (this *Graph) push(n Node) *Graph {
@@ -70,7 +69,6 @@ func (this *Graph) GoBFS() int {
 func New(traveler Traveler, workers int) *Graph {
 	graph := &Graph{
 		noOfProcess: workers,
-		visits:      0,
 		inQueue:     0,
 		queue:       make(chan Node),
 		traveler:    traveler,

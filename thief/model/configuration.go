@@ -13,17 +13,12 @@ type configuration struct {
 	Schema *scheme
 }
 
-func (this *configuration) load() {
-	//this.data = make(map[string]interface{})
-	//this.Layout.onHit = this.found
-}
-
 func (this *configuration) node(name string) *node {
-	if val, ok := this.Nodes[name]; ok {
-		return val
+	if n, ok := this.Nodes[name]; ok {
+		return n
 	}
 
-	panic(fmt.Sprintf("Configuration has no %s node", name))
+	panic(fmt.Errorf("Node [%s] has not been found in configuration", name))
 }
 
 func (this *configuration) root() *node {
@@ -33,7 +28,7 @@ func (this *configuration) root() *node {
 func (this *configuration) prepareURL(link string) string {
 	u, err := url.Parse(link)
 	if err != nil {
-		panic(fmt.Sprintf("Given link [%s] is not valid", link))
+		panic(fmt.Errorf("Given URL [%s] is not valid", link))
 	}
 
 	if u.Scheme != "" {

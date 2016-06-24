@@ -1,7 +1,7 @@
 {
-    "name": "_homegate",
-    "url": "http://www.homegate.ch/buy/apartment/canton-graubuenden",
-    "root": "cantons",
+    "name": "homegate",
+    "url": "http://www.homegate.ch/en",
+    "root": "buy",
     "nodes": {
         "buy": {
             "selector": "li.page-nav-item--buy a",
@@ -40,7 +40,7 @@
         }
     },
     "schema": {
-        "storage": "json",
+        "storage": "xml",
         "fields": {
             "id": {
                 "selector": "div.nr span",
