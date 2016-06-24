@@ -1,12 +1,28 @@
 package selector
 
 import (
-	"github.com/PuerkitoBio/goquery"
+	. "github.com/PuerkitoBio/goquery"
 	"strconv"
 	"strings"
+	"github.com/sokool/console"
 )
 
-var operations = map[string]func(*goquery.Selection, []string) map[string]string{
+type invoker func(*Selection, []string, *result)
+
+type result struct {
+	values interface{}
+}
+
+func (this *result) set(v interface{}) *result {
+	this.values = v
+	return this
+}
+
+func (this *result) get() interface{} {
+	return this.values
+}
+
+var operations = map[string]invoker{
 	"attr" : attr,
 	"map": arrayMap,
 	"node": node,
@@ -15,60 +31,68 @@ var operations = map[string]func(*goquery.Selection, []string) map[string]string
 	"html": html,
 }
 
-func text(selection *goquery.Selection, in []string) map[string]string {
-	out := make(map[string]string)
-	out[""] = strings.TrimSpace(selection.Text())
-
-	return out
+func text(s *Selection, params []string, out *result) {
+	out.set(strings.TrimSpace(s.First().Text()))
 }
 
-func attr(selection *goquery.Selection, in []string) map[string]string {
-	out := make(map[string]string)
-	a, _ := selection.Attr(in[0])
-	out[""] = strings.TrimSpace(a)
-	return out
-}
+func attr(s *Selection, in []string, out *result) {
+	switch len(in) {
+	case 2:
+		data := make(map[string]string)
+		s.Each(func(index int, item *Selection) {
+			attribute, _ := item.First().Attr(in[0])
+			data[strconv.Itoa(index)] = attribute
+		})
 
-func arrayMap(selection *goquery.Selection, in []string) map[string]string {
-	out := make(map[string]string)
+		out.set(data)
+		break
+	case 1:
+		attribute, _ := s.First().Attr(in[0])
 
-	nodes := selection.Children().Nodes
-	if len(nodes) >= 2 {
-		key := strings.TrimSpace(goquery.NewDocumentFromNode(selection.Children().Nodes[0]).Text())
-		value := strings.TrimSpace(goquery.NewDocumentFromNode(selection.Children().Nodes[1]).Text())
-
-		out[key] = value
+		out.set(attribute)
+		break
+	default:
+		console.Log("error")
 	}
-
-	return out
 }
 
-func html(selection *goquery.Selection, in []string) map[string]string {
-	out := make(map[string]string)
-	out[""], _ = selection.Html()
+func arrayMap(s *Selection, in []string, out *result) {
+	data := make(map[string]string)
+	s.Each(func(idx int, itm *Selection) {
+		key := strings.TrimSpace(NewDocumentFromNode(itm.Children().Nodes[0]).Text())
+		value := strings.TrimSpace(NewDocumentFromNode(itm.Children().Nodes[1]).Text())
 
-	return out
+		data[key] = value
+	})
+
+	out.set(data)
 }
 
-func node(selection *goquery.Selection, in []string) map[string]string {
-	out := make(map[string]string)
-
-	number, _ := strconv.Atoi(in[0])
-	node := selection.Contents().Nodes[number]
-	out[""] = strings.TrimSpace(selection.FindNodes(node).Text())
-
-	return out
+func html(s *Selection, in []string, out *result) {
+	html, _ := s.Html()
+	out.set(html)
 }
 
-func after(selection *goquery.Selection, in []string) map[string]string {
-	out := make(map[string]string)
+func node(s *Selection, in []string, out *result) {
+	//number, _ := strconv.Atoi(in[0])
+	//if len(s.Nodes) > 0 {
+	//	o := NewDocumentFromNode(s.Nodes[0])
+	//	a := NewDocumentFromNode(o.Nodes[0])
+	//	console.Log(a.Text(), number)
+	//}
 
-	for name, value := range arrayMap(selection, in) {
+	//node := s.Children().Nodes[number]
+	//
+	//out.set(strings.TrimSpace(s.FindNodes(node).Text()))
+}
+
+func after(s *Selection, in []string, out *result) {
+	all := &result{}
+	arrayMap(s, in, all)
+	for name, value := range all.get().(map[string]string) {
 		if name == in[0] {
-			out[""] = value
-			return out
+			out.set(value)
+			return
 		}
 	}
-
-	return out
 }
